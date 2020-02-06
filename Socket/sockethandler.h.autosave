@@ -1,0 +1,330 @@
+﻿#ifndef SOCKETHANDLER_H
+#define SOCKETHANDLER_H
+
+#include <QObject>
+#include <QTcpSocket>
+#include <QTimer>
+#include <QThread>
+
+#include "infotypedefine.h"
+
+enum SocketState{
+    Logining,
+    LoginingSuccess,
+    ReLogining,
+    Sending,
+    Receiveing,
+    Logouting,
+    None
+};
+
+struct RoomInfo{
+    QString strUid;
+    QString strRole;
+    QString strName;
+    QString strHeadIcon;
+    QString strArgoId;
+    QString strToken;
+    RoomInfo()
+    {
+        strUid = "";
+        strRole = "";
+        strName = "";
+        strHeadIcon = "";
+        strArgoId = "";
+        strToken = "";
+    }
+};
+
+class SocketHandler : public QObject
+{
+    Q_OBJECT
+public:
+
+    static SocketHandler* getInstance();
+
+    /**
+     * @brief vSetAddressInfo
+     * @param strAddress
+     * @param strPort
+     */
+    void vSetAddressInfo(QString strAddress, QString strPort);
+
+    /**
+     * @brief 设置房间信息
+     * @param strRoomId
+     * @param strSendUid
+     */
+    void vSetRoomInfo(QString strRoomId, QString strSendUid, RoomInfo sRoomInfo);
+
+
+    /**
+     * @brief 登录IM服务器
+     * @param 地址
+     * @param 端口
+     */
+    void vLoginServer();
+
+    /**
+     * @brief 退出IM服务器
+     */
+    void vLogoutServer();
+
+    /**
+     * @brief 创建房间
+     * @param 消息类型
+     * @param 房间ID
+     */
+    void vCreatConf(QString strUid, QString strRole, QString strName, QString strHeadIcon, QString strArgoId, QString strToken);
+
+    /**
+     * @brief 创建房间
+     */
+    void vCreatRoom();
+    /**
+     * @brief 销毁房间
+     */
+    void vLeaveConf();
+
+    /**
+     * @brief 获取房间成员
+     */
+    void getRoomMember();
+
+    /**
+     * @brief 发送信息
+     * @param 消息类型
+     * @param 信息
+     */
+    void sendMessage(int iMesType, QMap<int, QString> mapMes);
+
+    /**
+     * @brief 发送房间消息
+     * @param strData
+     */
+    void sendRoomMessage(const QString &strRoomId, const QString &strData, const QString &strReceiveUid);
+
+    /**
+     * @brief leaveRoom
+     */
+    void vDeleteConf();
+
+    /**
+     * @brief 获取共享
+     * @param key 共享KEY
+     * @param type 共享类型（1：单个属性；n：集合属性）
+     */
+    void getShareContent(QString strKey, QString strType);
+
+    /**
+     * @brief creatShareContent
+     * @param strKey   共享KEY
+     * @param strValue 共享Value
+     * @param strType  共享类型（1：单个属性；n：集合属性，value是追加）；
+     */
+    void creatShareContent(QString strKey, QString strValue, QString strType);
+
+    /**
+     * @brief updateShareContent
+     * @param strKey    共享KEY
+     * @param strValue  共享Value
+     * @param strType   共享类型（1：单个属性；n：集合属性，value是追加）
+     */
+    void updateShareContent(QString strKey, QString strValue, QString strType);
+
+    /**
+     * @brief deleteShareContent
+     * @param strKey    共享KEY
+     * @param strType   共享类型（1：单个属性；n：集合属性，value是追加）
+     */
+    void deleteShareContent(QString strKey, QString strType);
+
+    /**
+     * @brief removeShareContent
+     * @param strKey        共享KEY
+     * @param strType       共享类型（1：单个属性；n：集合属性，value是追加）
+     */
+    void removeShareContent(QString strKey, QString strType, QString strCount);
+
+
+    /**
+     * @brief setBAutoLogin
+     * @param bAutoLogin
+     */
+    void setBAutoLogin(bool bAutoLogin);
+
+    /**
+     * @brief setESocketState
+     * @param eSocketState
+     */
+    void setESocketState(const SocketState &eSocketState);
+
+signals:
+
+    /**
+     * @brief 登录成功
+     */
+    void sigLoginInfo(int iCode);
+
+    /**
+     * @brief 创建房间成功
+     */
+    void sigCreatConf();
+
+    /**
+     * @brief sigCreateRoom
+     */
+    void sigCreateRoom();
+
+    /**
+     * @brief 销毁房间成功
+     */
+    void sigDeleteConf();
+
+    /**
+     * @brief 其它端登录
+     */
+    void sigMultispotLogin();
+
+    /**
+     * @brief 用户加入房间
+     */
+    void sigUserJoin(QString strUid, QString strName, QString strAgoraId, QString strRole);
+
+    /**
+     * @brief 用户离开房间
+     */
+    void sigUserOffline(QString strUid);
+
+    /**
+     * @brief sigRoomMember
+     * @param strMember
+     */
+    void sigRoomMember(QString strMember);
+
+    /**
+     * @brief 发送消息到Ui
+     */
+    void sigReceiveMessage(QString strUid, QString strMes);
+
+    /**
+     * @brief 获取共享内容
+     */
+    void sigGetShareContent(QString strKey, QString strType, QString strMes);
+
+    /**
+     * @brief sigUpdateShareConten
+     * @param strKey
+     * @param strType
+     * @param strMes
+     */
+    void sigUpdateShareContent(QString strUid, QString strKey, QString strType, QString strMes);
+
+protected:
+    virtual void run();
+
+public slots:
+
+    /**
+     * @brief 连接成功
+     */
+    void connected_success();
+
+    /**
+     * @brief create_room
+     */
+    void create_room();
+
+    /**
+     * @brief 成功发送消息
+     */
+    void bytes_written();
+
+    /**
+     * @brief 读取信息
+     */
+    void read_message();
+
+    /**
+     * @brief 发生错误
+     * @param error
+     */
+    void display_error(QAbstractSocket::SocketError error);
+
+    /**
+     * @brief connected_state
+     * @param state
+     */
+    void connected_state(QAbstractSocket::SocketState state);
+
+    /**
+     * @brief 心跳包
+     */
+    void heart_beat();
+
+    /**
+     * @brief 断开连接
+     */
+    void disconnected_socket();
+
+    /**
+     * @brief 重连
+     */
+    void new_connect();
+
+private:
+    explicit SocketHandler(QObject *parent = 0);
+
+    /**
+     * @brief 组包
+     */
+    void vCollectivePacking(short iMesType, int iEventId, QString strRoomId, QString strSendUid, QString strReceiveUid, QMap<int, QString> mapMes);
+
+    /**
+     * @brief 缓冲区
+     */
+    void vBuffer();
+
+    /**
+     * @brief 停止发送心跳包
+     */
+    void vStopHeartBeat();
+
+    /**
+     * @brief 停止自动重连
+     */
+    void vStopAutoConnect();
+
+    /**
+     * @brief 重新登录
+     */
+    void vReloginServer();
+
+    /**
+     * @brief 解包
+     * @param in
+     */
+    void vUnPack(QDataStream &in);
+
+private:
+    static SocketHandler *pSocketHandler;
+    QTcpSocket *m_pTcpSocket = NULL;
+    QTimer *m_pHeartBeatTask = NULL;
+    QTimer *m_pConnectTask = NULL;
+    QByteArray m_bTotleByteArray;
+    bool m_bSend = false;
+    QString m_strAddress = "";
+    QString m_strPort = "";
+    QString m_strRoomId = "";
+    QString m_strSendUid = "";
+
+    bool m_bAutoLogin = false;
+    SocketState m_eSocketState = SocketState::Logining;
+    RoomInfo m_sRoomInfo;
+
+    int m_iId = -1;
+    qintptr ptr;
+
+};
+
+#endif // SOCKETHANDLER_H
